@@ -345,29 +345,23 @@ with t4:
             st.dataframe(row.T, **STRETCH)
 
 # Module 5: chat with the AI agent (Gemini + the five tools)
-with t5:
+@st.fragment
+def chat_tab():
     section("Ask the data", "Answers come from the tools only. Filters don't apply here.")
-
-    # Import the agent once; show a clear message if the API key is missing
     try:
         import agent
     except KeyError:
-        st.error("GEMINI_API_KEY is not set. Set it and restart the app.")
-        st.stop()
-
-    # Keep the visible conversation across Streamlit reruns
+        st.error("GEMINI_API_KEY is not set.")
+        return
     if "messages" not in st.session_state:
         st.session_state.messages = []
-
     if st.button("Clear chat"):
         st.session_state.messages = []
-        agent.reset_chat()   # also resets Gemini's memory (added below)
-        st.rerun()
-
+        agent.reset_chat()
+        st.rerun(scope="fragment")
     for m in st.session_state.messages:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
-
     if q := st.chat_input("e.g. Compare Budget Buyers and Portfolio Investors"):
         st.session_state.messages.append({"role": "user", "content": q})
         with st.chat_message("user"):
@@ -380,3 +374,7 @@ with t5:
                     reply = f"Sorry, the request failed: {e}"
             st.markdown(reply)
         st.session_state.messages.append({"role": "assistant", "content": reply})
+
+
+with t5:
+    chat_tab()
