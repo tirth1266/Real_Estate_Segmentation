@@ -1,5 +1,6 @@
 # agent.py - connects Gemini to the tools in agent_tools.py
 import os
+import time
 from google import genai
 from google.genai import types
 import agent_tools
@@ -19,35 +20,48 @@ TOOLS = [
 SYSTEM = (
     "You are a data analyst assistant for a real estate buyer segmentation project. "
     "Answer only from tool results and never invent numbers. "
+    "Call the fewest tools needed, usually one. For comparisons use compare_segments only. "
     "If no tool can answer, say so."
 )
 
+
 def _new_chat():
     return client.chats.create(
-        model="gemini-3.8-flash",
-        config=types.GenerateContentConfig(system_instruction=SYSTEM, tools=TOOLS),
+        model="gemini-3.1-flash-lite",
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM,
+            tools=TOOLS,
+            # keep thinking minimal so each model call is fast
+            thinking_config=types.ThinkingConfig(thinking_level="low"),
+        ),
     )
 
+
 chat = _new_chat()
+
 
 def reset_chat():
     global chat
     chat = _new_chat()
-import time
+
 
 def ask(question: str) -> str:
-    # Retry a few times when Gemini is overloaded (503) or rate-limited (429)
+    # Retry when Gemini is overloaded (503); print timings to the terminal
     for attempt in range(4):
+        t = time.time()
         try:
-            return chat.send_message(question).text
+            text = chat.send_message(question).text
+            print(f"ask() ok in {time.time() - t:.1f}s (attempt {attempt + 1})")
+            return text
         except Exception as e:
-            busy = "503" in str(e)
-            if busy and attempt < 3:
+            print(f"attempt {attempt + 1} failed after {time.time() - t:.1f}s: {e}")
+            if "503" in str(e) and attempt < 3:
                 time.sleep(2 ** attempt * 2)   # waits 2s, 4s, 8s
                 continue
             raise
 
-# Terminal test loop
+
+# Terminal test loop (must stay at the very bottom of the file)
 if __name__ == "__main__":
     while True:
         q = input("Ask: ")
