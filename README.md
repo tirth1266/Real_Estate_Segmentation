@@ -1,6 +1,7 @@
+**Live demo:** [realestatesegmentation-tirth.streamlit.app](https://realestatesegmentation-tirth.streamlit.app)
 # ML-Based Buyer Segmentation and Investment Profiling for Real Estate Market Intelligence
 
-Unified Mentor internship project. This project groups real estate clients into behavioural segments using K-Means clustering, validates the result with hierarchical clustering, and presents everything in an interactive Streamlit app.
+This project groups real estate clients into behavioural segments using K-Means clustering, validates the result with hierarchical clustering, and presents everything in an interactive Streamlit app.
 
 ## 1. Goal
 
